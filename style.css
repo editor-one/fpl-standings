@@ -209,13 +209,18 @@ footer a:hover {
     font-size: 0.7rem;
   }
 }
-@media (max-width: 600px) {
-  .table-container {
-    padding: 0 10px; /* optional: small padding on sides */
-  }
+.table-container {
+  overflow-x: auto;
+  width: 100%;
+  display: block;       /* change from flex to block */
+  text-align: center;   /* center the table inside */
+  padding: 0;           /* remove extra padding */
+  margin: 0 auto;       /* center container itself */
+}
 
-  table th, table td {
-    padding: 6px 8px; /* smaller cells on mobile */
-    font-size: 0.75rem; 
-  }
+table {
+  display: inline-table; /* allow text-align centering */
+  min-width: 300px;      /* ensure table doesn't shrink too much */
+  max-width: 100%;       /* prevent overflow */
+  margin: 0 auto;        /* center inside container */
 }
