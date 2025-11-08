@@ -1,5 +1,5 @@
 // =======================================
-// Live FPL League + Live, Upcoming & Finished Matches (Optimized)
+// Live FPL League + Live, Upcoming & Finished Matches (Optimized + Fixed Live)
 // =======================================
 
 const LEAGUE_ID = 599995;
@@ -120,7 +120,7 @@ async function updateLeagueLive() {
     statusEl.textContent = "Live updated: " + new Date().toLocaleTimeString();
 
     // Update sidebar matches
-    fetchAllMatchesOptimized();
+    fetchAllMatchesFixed();
 
   } catch(err) {
     console.error(err);
@@ -128,41 +128,41 @@ async function updateLeagueLive() {
   }
 }
 
-// ------------------ Football-Data.org Matches (Optimized) ------------------
+// ------------------ Football-Data.org Matches (Optimized + Fixed) ------------------
 
 const FOOTBALL_DATA_KEY = "6f318b8cabd54623a94b54c4f6eea73a";
 const FOOTBALL_DATA_BASE = "https://api.football-data.org/v4";
 
-async function fetchAllMatchesOptimized() {
+async function fetchAllMatchesFixed() {
   try {
     matchesContainer.innerHTML = "";
 
-    // Fetch all matches in one request (status=LIVE,SCHEDULED,FINISHED)
     const statuses = ["LIVE", "SCHEDULED", "FINISHED"];
-    const allMatches = [];
+    const allMatches = {};
 
+    // Fetch each status in parallel
     await Promise.all(statuses.map(async status => {
       const res = await fetch(`https://corsproxy.io/?${FOOTBALL_DATA_BASE}/matches?competitions=PL&status=${status}`, {
         headers: { "X-Auth-Token": FOOTBALL_DATA_KEY }
       });
       const data = await res.json();
-      allMatches.push(...(data.matches || []));
+      allMatches[status] = data.matches || [];
     }));
 
-    // Use DocumentFragment to append matches
     const fragment = document.createDocumentFragment();
 
-    const liveMatches = allMatches.filter(m => m.status === "LIVE");
-    if (liveMatches.length > 0) {
+    // --- Ongoing Matches ---
+    if (allMatches["LIVE"].length > 0) {
       const liveHeading = document.createElement("h3");
       liveHeading.textContent = "Ongoing Matches";
       fragment.appendChild(liveHeading);
 
-      liveMatches.forEach(m => {
+      allMatches["LIVE"].forEach(m => {
         const div = document.createElement("div");
         div.className = "match";
         const homeScore = m.score?.fullTime?.home ?? 0;
         const awayScore = m.score?.fullTime?.away ?? 0;
+
         div.innerHTML = `
           <div class="teams">${m.homeTeam.name} ${homeScore} - ${awayScore} ${m.awayTeam.name}</div>
           <div class="scoreline">Kick-off: ${new Date(m.utcDate).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
@@ -171,31 +171,31 @@ async function fetchAllMatchesOptimized() {
       });
     }
 
-    const upcomingMatches = allMatches.filter(m => m.status === "SCHEDULED");
-    if (upcomingMatches.length > 0) {
+    // --- Upcoming Matches ---
+    if (allMatches["SCHEDULED"].length > 0) {
       const heading = document.createElement("h3");
       heading.textContent = "Upcoming Matches";
       fragment.appendChild(heading);
 
-      upcomingMatches.forEach(m => {
+      allMatches["SCHEDULED"].forEach(m => {
         const div = document.createElement("div");
         div.className = "match";
         const utcDate = new Date(m.utcDate);
         div.innerHTML = `
           <div class="teams">${m.homeTeam.name} vs ${m.awayTeam.name}</div>
-          <div class="scoreline">Kick-off: ${utcDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+          <div class="scoreline">Kick-off: ${utcDate.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
         `;
         fragment.appendChild(div);
       });
     }
 
-    const finishedMatches = allMatches.filter(m => m.status === "FINISHED");
-    if (finishedMatches.length > 0) {
+    // --- Finished Matches with Scorers ---
+    if (allMatches["FINISHED"].length > 0) {
       const heading = document.createElement("h3");
       heading.textContent = "Finished Matches (Goal Scorers)";
       fragment.appendChild(heading);
 
-      finishedMatches.forEach(m => {
+      allMatches["FINISHED"].forEach(m => {
         const div = document.createElement("div");
         div.className = "match";
         const homeScore = m.score.fullTime.home ?? 0;
