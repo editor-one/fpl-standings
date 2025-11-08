@@ -99,16 +99,19 @@ async function updateLeagueLive() {
 
     teamsWithLive.sort((a, b) => b.combined - a.combined);
 
-    // Populate table
+    // Populate table with new Team Info column
     teamsWithLive.forEach((team, index) => {
       const tr = document.createElement("tr");
       if (index === 0) tr.classList.add("highlight");
+
       tr.innerHTML = `
-        <td>${index+1}</td>
-        <td>${team.entry_name}</td>
+        <td>${index + 1}</td>
+        <td>
+          <strong>${team.entry_name}</strong><br>
+          <span class="captain">Captain: ${team.captain} (VC: ${team.vice})</span><br>
+          <span class="chip">Chip: ${team.active_chip}</span>
+        </td>
         <td>${team.player_name}</td>
-        <td>${team.captain} <span class="vice">(VC: ${team.vice})</span></td>
-        <td>${team.active_chip}</td>
         <td>${team.total}</td>
         <td>${team.livePoints}</td>
         <td>${team.combined}</td>
@@ -121,7 +124,7 @@ async function updateLeagueLive() {
     // Update sidebar with live, upcoming & finished matches
     fetchAllMatches();
 
-  } catch(err) {
+  } catch (err) {
     console.error(err);
     statusEl.textContent = "Error loading FPL data";
   }
