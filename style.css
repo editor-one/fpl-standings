@@ -209,3 +209,13 @@ footer a:hover {
     font-size: 0.7rem;
   }
 }
+@media (max-width: 600px) {
+  .table-container {
+    padding: 0 10px; /* optional: small padding on sides */
+  }
+
+  table th, table td {
+    padding: 6px 8px; /* smaller cells on mobile */
+    font-size: 0.75rem; 
+  }
+}
