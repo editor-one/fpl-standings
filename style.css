@@ -5,7 +5,7 @@ body {
   background: #0d1117;
   color: #e6edf3;
   margin: 0;
-  padding: 30px 10px;
+  padding: 20px;
   text-align: center;
 }
 
@@ -17,23 +17,71 @@ h1 {
 .subtitle {
   color: #8b949e;
   font-size: 0.9rem;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
+}
+
+.main-container {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.league-container {
+  flex: 2;
+}
+
+.sidebar {
+  flex: 1;
+  background: #161b22;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #000;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.sidebar h2 {
+  color: #58a6ff;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.match {
+  background: #21262d;
+  margin: 8px 0;
+  padding: 10px;
+  border-radius: 6px;
+  color: #e6edf3;
+  font-size: 0.9rem;
+}
+
+.match .teams {
+  font-weight: 500;
+}
+
+.match .scoreline {
+  font-weight: 600;
+  color: #56d364;
+  margin: 4px 0;
+}
+
+.match .scorers {
+  font-size: 0.8rem;
+  color: #8b949e;
 }
 
 .table-container {
   overflow-x: auto;
-  display: flex;
-  justify-content: center;
 }
 
 table {
   width: 100%;
-  max-width: 1000px;
   border-collapse: collapse;
   background: #161b22;
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 15px rgba(0,0,0,0.4);
 }
 
 th, td {
@@ -47,7 +95,6 @@ th {
   color: #79c0ff;
   font-weight: 600;
   font-size: 0.9rem;
-  letter-spacing: 0.5px;
 }
 
 td {
@@ -72,13 +119,13 @@ tr:hover {
 }
 
 #status {
-  margin: 15px 0;
+  margin: 10px 0;
   color: #a5d6ff;
   font-size: 0.9em;
 }
 
 footer {
-  margin-top: 25px;
+  margin-top: 20px;
   color: #8b949e;
   font-size: 0.8rem;
 }
@@ -92,14 +139,19 @@ footer a:hover {
   text-decoration: underline;
 }
 
-/* Responsive tweaks */
-@media (max-width: 700px) {
+@media (max-width: 900px) {
+  .main-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
   th, td {
     padding: 8px 5px;
     font-size: 0.8rem;
   }
 
-  .subtitle {
-    font-size: 0.8rem;
+  .sidebar {
+    max-height: none;
+    width: 100%;
   }
 }

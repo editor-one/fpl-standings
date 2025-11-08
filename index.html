@@ -1,37 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Live FPL League Tracker</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <h1>🏆 Live FPL League Tracker</h1>
   <p class="subtitle">Tracking League #599995 — Updated every 60 seconds</p>
 
-  <div id="status">Loading live data...</div>
+  <div class="main-container">
+    <!-- League Table -->
+    <div class="league-container">
+      <div id="status">Loading live league data...</div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Team</th>
+              <th>Manager</th>
+              <th>Captain / Vice</th>
+              <th>Chip</th>
+              <th>Total</th>
+              <th>Live</th>
+              <th>Combined</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
 
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Team</th>
-          <th>Manager</th>
-          <th>Captain / Vice</th>
-          <th>Chip</th>
-          <th>Total</th>
-          <th>Live</th>
-          <th>Combined</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
+    <!-- Sidebar for ongoing matches -->
+    <div class="sidebar">
+      <h2>Ongoing Matches</h2>
+      <div id="matchesContainer">Loading matches...</div>
+    </div>
   </div>
 
   <footer>
-    <p>Data from <a href="https://fantasy.premierleague.com" target="_blank">Fantasy Premier League</a></p>
+    <p>Data from <a href="https://fantasy.premierleague.com" target="_blank">FPL</a></p>
   </footer>
 
   <script src="script.js"></script>
