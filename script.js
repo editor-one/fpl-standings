@@ -1,9 +1,9 @@
 // =======================================
-// Live FPL League + Live, Upcoming & Finished Matches
+// Live FPL League + Live, Upcoming & Finished Matches (Optimized)
 // =======================================
 
 const LEAGUE_ID = 599995;
-const CORS_PROXY = "https://corsproxy.io/?";  // optional for browser
+const CORS_PROXY = "https://corsproxy.io/?";
 const FPL_BASE = CORS_PROXY + "https://fantasy.premierleague.com/api/";
 
 const statusEl = document.getElementById("status");
@@ -53,11 +53,7 @@ async function getPlayerNames() {
 }
 
 function calculateLivePoints(picks, livePlayers) {
-  let total = 0;
-  picks.forEach(pick => {
-    total += (livePlayers[pick.element] || 0) * pick.multiplier;
-  });
-  return total;
+  return picks.reduce((total, pick) => total + (livePlayers[pick.element] || 0) * pick.multiplier, 0);
 }
 
 // ------------------ League Table Update ------------------
@@ -99,16 +95,17 @@ async function updateLeagueLive() {
 
     teamsWithLive.sort((a, b) => b.combined - a.combined);
 
-    // Populate table with new Team Info column
+    // Use DocumentFragment for smoother DOM updates
+    const fragment = document.createDocumentFragment();
     teamsWithLive.forEach((team, index) => {
       const tr = document.createElement("tr");
       if (index === 0) tr.classList.add("highlight");
 
       tr.innerHTML = `
         <td>${index + 1}</td>
-        <td>
-          <strong>${team.entry_name}</strong><br>
-          <span class="captain">Captain: ${team.captain} (VC: ${team.vice})</span><br>
+        <td class="team-info">
+          <span class="team-name">${team.entry_name}</span>
+          <span class="captain">Captain: ${team.captain} (VC: ${team.vice})</span>
           <span class="chip">Chip: ${team.active_chip}</span>
         </td>
         <td>${team.player_name}</td>
@@ -116,66 +113,69 @@ async function updateLeagueLive() {
         <td>${team.livePoints}</td>
         <td>${team.combined}</td>
       `;
-      tableBody.appendChild(tr);
+      fragment.appendChild(tr);
     });
+    tableBody.appendChild(fragment);
 
     statusEl.textContent = "Live updated: " + new Date().toLocaleTimeString();
 
-    // Update sidebar with live, upcoming & finished matches
-    fetchAllMatches();
+    // Update sidebar matches
+    fetchAllMatchesOptimized();
 
-  } catch (err) {
+  } catch(err) {
     console.error(err);
     statusEl.textContent = "Error loading FPL data";
   }
 }
 
-// ------------------ Football-Data.org Matches ------------------
+// ------------------ Football-Data.org Matches (Optimized) ------------------
 
 const FOOTBALL_DATA_KEY = "6f318b8cabd54623a94b54c4f6eea73a";
 const FOOTBALL_DATA_BASE = "https://api.football-data.org/v4";
 
-async function fetchAllMatches() {
+async function fetchAllMatchesOptimized() {
   try {
     matchesContainer.innerHTML = "";
 
-    // 1️⃣ Live matches
-    const liveRes = await fetch(`https://corsproxy.io/?${FOOTBALL_DATA_BASE}/matches?competitions=PL&status=LIVE`, {
-      headers: { "X-Auth-Token": FOOTBALL_DATA_KEY }
-    });
-    const liveData = await liveRes.json();
-    const liveMatches = liveData.matches || [];
+    // Fetch all matches in one request (status=LIVE,SCHEDULED,FINISHED)
+    const statuses = ["LIVE", "SCHEDULED", "FINISHED"];
+    const allMatches = [];
 
+    await Promise.all(statuses.map(async status => {
+      const res = await fetch(`https://corsproxy.io/?${FOOTBALL_DATA_BASE}/matches?competitions=PL&status=${status}`, {
+        headers: { "X-Auth-Token": FOOTBALL_DATA_KEY }
+      });
+      const data = await res.json();
+      allMatches.push(...(data.matches || []));
+    }));
+
+    // Use DocumentFragment to append matches
+    const fragment = document.createDocumentFragment();
+
+    const liveMatches = allMatches.filter(m => m.status === "LIVE");
     if (liveMatches.length > 0) {
       const liveHeading = document.createElement("h3");
       liveHeading.textContent = "Ongoing Matches";
-      matchesContainer.appendChild(liveHeading);
+      fragment.appendChild(liveHeading);
 
       liveMatches.forEach(m => {
         const div = document.createElement("div");
         div.className = "match";
         const homeScore = m.score?.fullTime?.home ?? 0;
         const awayScore = m.score?.fullTime?.away ?? 0;
-
         div.innerHTML = `
           <div class="teams">${m.homeTeam.name} ${homeScore} - ${awayScore} ${m.awayTeam.name}</div>
           <div class="scoreline">Kick-off: ${new Date(m.utcDate).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
         `;
-        matchesContainer.appendChild(div);
+        fragment.appendChild(div);
       });
     }
 
-    // 2️⃣ Upcoming matches
-    const upcomingRes = await fetch(`https://corsproxy.io/?${FOOTBALL_DATA_BASE}/matches?competitions=PL&status=SCHEDULED`, {
-      headers: { "X-Auth-Token": FOOTBALL_DATA_KEY }
-    });
-    const upcomingData = await upcomingRes.json();
-    const upcomingMatches = upcomingData.matches || [];
-
+    const upcomingMatches = allMatches.filter(m => m.status === "SCHEDULED");
     if (upcomingMatches.length > 0) {
       const heading = document.createElement("h3");
       heading.textContent = "Upcoming Matches";
-      matchesContainer.appendChild(heading);
+      fragment.appendChild(heading);
 
       upcomingMatches.forEach(m => {
         const div = document.createElement("div");
@@ -185,39 +185,37 @@ async function fetchAllMatches() {
           <div class="teams">${m.homeTeam.name} vs ${m.awayTeam.name}</div>
           <div class="scoreline">Kick-off: ${utcDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
         `;
-        matchesContainer.appendChild(div);
+        fragment.appendChild(div);
       });
     }
 
-    // 3️⃣ Finished matches with scorers
-    const finishedRes = await fetch(`https://corsproxy.io/?${FOOTBALL_DATA_BASE}/matches?competitions=PL&status=FINISHED`, {
-      headers: { "X-Auth-Token": FOOTBALL_DATA_KEY }
-    });
-    const finishedData = await finishedRes.json();
-    const finishedMatches = finishedData.matches || [];
-
+    const finishedMatches = allMatches.filter(m => m.status === "FINISHED");
     if (finishedMatches.length > 0) {
       const heading = document.createElement("h3");
       heading.textContent = "Finished Matches (Goal Scorers)";
-      matchesContainer.appendChild(heading);
+      fragment.appendChild(heading);
 
       finishedMatches.forEach(m => {
         const div = document.createElement("div");
         div.className = "match";
+        const homeScore = m.score.fullTime.home ?? 0;
+        const awayScore = m.score.fullTime.away ?? 0;
 
-        const homeGoals = (m.goals || []).filter(g => g.team.id === m.homeTeam.id);
-        const awayGoals = (m.goals || []).filter(g => g.team.id === m.awayTeam.id);
+        const homeScorers = m.homeTeam.scorers?.join(", ") || "-";
+        const awayScorers = m.awayTeam.scorers?.join(", ") || "-";
 
         div.innerHTML = `
-          <div class="teams">${m.homeTeam.name} ${m.score.fullTime.home} - ${m.score.fullTime.away} ${m.awayTeam.name}</div>
+          <div class="teams">${m.homeTeam.name} ${homeScore} - ${awayScore} ${m.awayTeam.name}</div>
           <div class="scorers">
-            Home scorers: ${homeGoals.length ? homeGoals.map(g => g.scorer.name).join(", ") : "-"}<br>
-            Away scorers: ${awayGoals.length ? awayGoals.map(g => g.scorer.name).join(", ") : "-"}
+            Home scorers: ${homeScorers}<br>
+            Away scorers: ${awayScorers}
           </div>
         `;
-        matchesContainer.appendChild(div);
+        fragment.appendChild(div);
       });
     }
+
+    matchesContainer.appendChild(fragment);
 
   } catch(err) {
     console.error(err);
